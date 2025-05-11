@@ -1,3 +1,15 @@
+Description:
+
+Developed an advanced RAG (Retrieval-Augmented Generation) chatbot that enables intelligent Q&A interactions with website content:
+• Implemented web scraping with BeautifulSoup to extract and process website content while handling character encoding and HTML parsing
+• Built a vector database using FAISS for efficient semantic search and retrieval of relevant content chunks
+• Integrated OpenAI's GPT model for natural language understanding and response generation
+• Designed a robust error handling system for network requests, API calls, and content processing
+• Created a memory-based conversation system to maintain context across multiple queries
+• Implemented text chunking and embedding generation for optimal information retrieval
+• Developed a user-friendly interface with clear error messages and progress indicators
+
+
 # Running the project
 
 python3.11 -m venv myenv
