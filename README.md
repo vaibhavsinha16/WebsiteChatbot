@@ -9,6 +9,9 @@ Developed an advanced RAG (Retrieval-Augmented Generation) chatbot that enables 
 • Implemented text chunking and embedding generation for optimal information retrieval
 • Developed a user-friendly interface with clear error messages and progress indicators
 
+![image](https://github.com/user-attachments/assets/8f5f13a1-873d-46b2-b5a1-3cb1b7b8efa4)
+
+
 
 # Running the project
 
