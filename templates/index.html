@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Website Content Analyzer</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .chat-container {
+            height: calc(100vh - 200px);
+        }
+        .message {
+            max-width: 80%;
+            margin: 10px;
+            padding: 15px;
+            border-radius: 15px;
+        }
+        .user-message {
+            background-color: #2b313e;
+            margin-left: auto;
+        }
+        .bot-message {
+            background-color: #475063;
+            margin-right: auto;
+        }
+        .typing-indicator {
+            display: none;
+        }
+        .typing-indicator.active {
+            display: flex;
+        }
+        @media (max-width: 768px) {
+            .chat-container {
+                height: calc(100vh - 250px);
+            }
+            .message {
+                max-width: 90%;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white">
+    <div class="container mx-auto px-4 py-8">
+        <header class="text-center mb-8">
+            <h1 class="text-4xl font-bold mb-2">🤖 Website Content Analyzer</h1>
+            <p class="text-gray-400">Ask questions about any website's content</p>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Sidebar -->
+            <div class="md:col-span-1 bg-gray-800 p-6 rounded-lg">
+                <h2 class="text-xl font-semibold mb-4">Configuration</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Website URL</label>
+                        <input type="url" id="websiteUrl" class="w-full px-4 py-2 rounded bg-gray-700 border border-gray-600 focus:border-blue-500 focus:outline-none" placeholder="https://example.com">
+                    </div>
+                    <button id="processBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-200">
+                        Process Website
+                    </button>
+                </div>
+                <div class="mt-8">
+                    <h3 class="text-lg font-semibold mb-2">About</h3>
+                    <p class="text-gray-400 text-sm">
+                        This chatbot uses RAG (Retrieval-Augmented Generation) to answer questions about website content.
+                    </p>
+                    <ul class="mt-4 text-sm text-gray-400 space-y-2">
+                        <li>• Web content analysis</li>
+                        <li>• Semantic search</li>
+                        <li>• Context-aware responses</li>
+                        <li>• Mobile-friendly interface</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Chat Interface -->
+            <div class="md:col-span-2 bg-gray-800 p-6 rounded-lg">
+                <div id="chatContainer" class="chat-container overflow-y-auto mb-4">
+                    <div id="messages" class="space-y-4">
+                        <!-- Messages will be added here -->
+                    </div>
+                    <div id="typingIndicator" class="typing-indicator items-center space-x-2 p-4">
+                        <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce"></div>
+                        <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce delay-100"></div>
+                        <div class="w-2 h-2 bg-blue-500 rounded-full animate-bounce delay-200"></div>
+                    </div>
+                </div>
+                <div class="flex space-x-4">
+                    <input type="text" id="questionInput" class="flex-1 px-4 py-2 rounded bg-gray-700 border border-gray-600 focus:border-blue-500 focus:outline-none" placeholder="Ask a question about the website content...">
+                    <button id="sendBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded transition duration-200">
+                        Send
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const websiteUrlInput = document.getElementById('websiteUrl');
+        const processBtn = document.getElementById('processBtn');
+        const questionInput = document.getElementById('questionInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const messagesContainer = document.getElementById('messages');
+        const typingIndicator = document.getElementById('typingIndicator');
+        const chatContainer = document.getElementById('chatContainer');
+
+        let isWebsiteProcessed = false;
+
+        function addMessage(content, isUser = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
+            messageDiv.innerHTML = `
+                <div class="flex items-start">
+                    <div class="flex-shrink-0 mr-3">
+                        <div class="w-8 h-8 rounded-full flex items-center justify-center bg-gray-700">
+                            ${isUser ? '👤' : '🤖'}
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <p class="text-sm">${content}</p>
+                    </div>
+                </div>
+            `;
+            messagesContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function showTypingIndicator() {
+            typingIndicator.classList.add('active');
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function hideTypingIndicator() {
+            typingIndicator.classList.remove('active');
+        }
+
+        async function processWebsite() {
+            const url = websiteUrlInput.value;
+
+            if (!url) {
+                alert('Please enter a website URL');
+                return;
+            }
+
+            processBtn.disabled = true;
+            processBtn.textContent = 'Processing...';
+
+            try {
+                const response = await fetch('/process_website', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ url: url }),
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    isWebsiteProcessed = true;
+                    addMessage('Website processed successfully! You can now ask questions.', false);
+                } else {
+                    throw new Error(data.error || 'Failed to process website');
+                }
+            } catch (error) {
+                alert(error.message);
+            } finally {
+                processBtn.disabled = false;
+                processBtn.textContent = 'Process Website';
+            }
+        }
+
+        async function askQuestion() {
+            const question = questionInput.value.trim();
+            if (!question) return;
+
+            if (!isWebsiteProcessed) {
+                alert('Please process a website first');
+                return;
+            }
+
+            addMessage(question, true);
+            questionInput.value = '';
+            showTypingIndicator();
+
+            try {
+                const response = await fetch('/ask', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ question: question }),
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    addMessage(data.response, false);
+                } else {
+                    throw new Error(data.error || 'Failed to get response');
+                }
+            } catch (error) {
+                addMessage(`Error: ${error.message}`, false);
+            } finally {
+                hideTypingIndicator();
+            }
+        }
+
+        processBtn.addEventListener('click', processWebsite);
+        sendBtn.addEventListener('click', askQuestion);
+        questionInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                askQuestion();
+            }
+        });
+    </script>
+</body>
+</html> 
